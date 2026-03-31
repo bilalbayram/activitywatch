@@ -32,7 +32,6 @@ jobs:
             ubuntu-24.04-arm,
             windows-latest,
             macos-14,
-            macos-latest,
           ]
         python_version: [3.9]
         node_version: [22]
@@ -155,6 +154,7 @@ jobs:
 
           source venv/bin/activate
           make dist/ActivityWatch.dmg
+          MACOS_ARCH="$(uname -m)"
 
           if [ -n "$APPLE_EMAIL" ]; then
             codesign --verbose -s ${APPLE_PERSONALID} dist/ActivityWatch.dmg
@@ -165,7 +165,7 @@ jobs:
 
             make dist/notarize
           fi
-          mv dist/ActivityWatch.dmg dist/activitywatch-${VERSION_TAG:-$(scripts/package/getversion.sh)}-macos-x86_64.dmg
+          mv dist/ActivityWatch.dmg dist/activitywatch-${VERSION_TAG:-$(scripts/package/getversion.sh)}-macos-${MACOS_ARCH}.dmg
         env:
           APPLE_EMAIL: ${{ secrets.APPLE_EMAIL }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
@@ -209,7 +209,7 @@ jobs:
 
       - name: Generate release notes
         run: |
-          LAST_RELEASE=`STABLE_ONLY=${{ steps.version.output.is_stable }} ./scripts/get_latest_release.sh`
+          LAST_RELEASE=`STABLE_ONLY=${{ steps.version.outputs.is_stable }} ./scripts/get_latest_release.sh`
           ./scripts/build_changelog.py --range "$LAST_RELEASE...${{ steps.version.outputs.full }}"
 
       - name: Rename
